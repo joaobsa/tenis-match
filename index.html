@@ -334,9 +334,9 @@
 </header>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('jogos')">Jogos marcados</div>
-  <div class="tab" onclick="switchTab('agendar')">Quero jogar</div>
-  <div class="tab" onclick="switchTab('ver')">Disponibilidades</div>
+  <div class="tab active" onclick="window.switchTab('jogos')">Jogos marcados</div>
+  <div class="tab" onclick="window.switchTab('agendar')">Quero jogar</div>
+  <div class="tab" onclick="window.switchTab('ver')">Disponibilidades</div>
 </div>
 
 <div class="content">
@@ -364,7 +364,7 @@
       <div class="section-label">Seus dados</div>
       <div class="input-row"><label>Nome</label><input type="text" id="inp-nome" placeholder="ex: Carlos" autocomplete="name" /></div>
       <div class="input-row"><label>WhatsApp</label><input type="tel" id="inp-tel" placeholder="ex: 11999998888" autocomplete="tel" /></div>
-      <button class="btn-primary" onclick="publicar()">Publicar disponibilidade</button>
+      <button class="btn-primary" onclick="window.publicar()">Publicar disponibilidade</button>
     </div>
   </div>
 
