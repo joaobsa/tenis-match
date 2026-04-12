@@ -209,21 +209,6 @@
   .badge-waiting { background: var(--amber-light); color: var(--amber); }
   .badge-matched { background: var(--green-light); color: var(--green); }
 
-  .btn-match {
-    padding: 6px 12px;
-    background: var(--green);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    font-family: 'DM Sans', sans-serif;
-    transition: background .15s;
-  }
-  .btn-match:hover { background: #155f3f; }
-
   .btn-cancel {
     padding: 6px 10px;
     background: transparent;
@@ -274,7 +259,6 @@
   .match-vs { display: flex; flex-direction: column; flex: 1; gap: 1px; }
   .match-player { font-size: 14px; font-weight: 600; color: #0d4a30; }
   .match-divider { font-size: 11px; color: var(--green-mid); font-weight: 600; letter-spacing: .04em; }
-  .match-ball { font-size: 22px; flex-shrink: 0; }
 
   .no-matches {
     text-align: center;
@@ -360,6 +344,21 @@
     border: 1px solid rgba(26,122,82,0.18);
     font-weight: 500;
   }
+  .btn-cancel-match {
+    padding: 5px 9px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+    flex-shrink: 0;
+    transition: all .15s;
+  }
+  .btn-cancel-match:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
   .btn-cancel-modal {
     width: 100%;
     padding: 10px;
@@ -440,6 +439,20 @@
     <div class="input-row"><label>WhatsApp</label><input type="tel" id="modal-tel" placeholder="ex: 11999998888" autocomplete="tel" /></div>
     <button class="btn-primary" onclick="window._confirmMatch()">Marcar jogo 🎾</button>
     <button class="btn-cancel-modal" onclick="window._closeModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal cancelar jogo marcado -->
+<div class="modal-overlay" id="cancel-match-modal" onclick="if(event.target===this)window._closeCancelModal()" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Cancelar jogo</div>
+    <div class="modal-slot-desc" id="cancel-modal-slot-desc"></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.5">Confirme seus dados. Uma mensagem de desculpas será enviada automaticamente ao parceiro.</p>
+    <div class="input-row"><label>Seu nome</label><input type="text" id="cancel-modal-nome" placeholder="ex: Carlos" autocomplete="name" /></div>
+    <div class="input-row"><label>WhatsApp</label><input type="tel" id="cancel-modal-tel" placeholder="ex: 11999998888" autocomplete="tel" /></div>
+    <button class="btn-primary" style="background:var(--red)" onclick="window._confirmCancel()">Cancelar jogo & avisar parceiro</button>
+    <button class="btn-cancel-modal" onclick="window._closeCancelModal()">Voltar</button>
   </div>
 </div>
 
@@ -580,7 +593,7 @@
             <div class="match-divider">vs</div>
             <div class="match-player">${s.matchName}</div>
           </div>
-          <div class="match-ball">🎾</div>
+          <button class="btn-cancel-match" onclick="window._openCancelModal('${s.id}')">Cancelar</button>
         </div>`;
       });
     });
@@ -629,6 +642,63 @@
   window._closeModal = function() {
     document.getElementById('match-modal').style.display = 'none';
     pendingMatchId = null;
+  };
+
+  let pendingCancelId = null;
+
+  window._openCancelModal = function(id) {
+    pendingCancelId = id;
+    const slot = slots.find(s => s.id === id);
+    if (!slot) return;
+    const dt = new Date(slot.date + 'T12:00:00');
+    document.getElementById('cancel-modal-slot-desc').textContent =
+      `${WDS_FULL[dt.getDay()]}, ${dt.getDate()}/${dt.getMonth()+1} às ${slot.time} — ${slot.name} vs ${slot.matchName}`;
+    document.getElementById('cancel-modal-nome').value = document.getElementById('inp-nome').value;
+    document.getElementById('cancel-modal-tel').value = document.getElementById('inp-tel').value;
+    document.getElementById('cancel-match-modal').style.display = 'flex';
+  };
+
+  window._closeCancelModal = function() {
+    document.getElementById('cancel-match-modal').style.display = 'none';
+    pendingCancelId = null;
+  };
+
+  window._confirmCancel = async function() {
+    const nome = document.getElementById('cancel-modal-nome').value.trim();
+    const tel = document.getElementById('cancel-modal-tel').value.replace(/\D/g,'');
+    if (!nome) { showToast('Digite seu nome'); return; }
+    if (tel.length < 10) { showToast('Digite um WhatsApp válido'); return; }
+
+    const slot = slots.find(s => s.id === pendingCancelId);
+    if (!slot) { window._closeCancelModal(); return; }
+
+    const isPlayer1 = slot.tel === tel || slot.name.toLowerCase() === nome.toLowerCase();
+    const isPlayer2 = slot.matchTel === tel || slot.matchName.toLowerCase() === nome.toLowerCase();
+    if (!isPlayer1 && !isPlayer2) {
+      showToast('Nome ou WhatsApp não confere com nenhum jogador');
+      return;
+    }
+
+    const otherName = isPlayer1 ? slot.matchName : slot.name;
+    const otherTel  = isPlayer1 ? slot.matchTel  : slot.tel;
+
+    document.getElementById('inp-nome').value = nome;
+    document.getElementById('inp-tel').value = tel;
+
+    const id = pendingCancelId;
+    window._closeCancelModal();
+
+    const dt = new Date(slot.date + 'T12:00:00');
+    const msg = `Oi ${otherName}! Infelizmente preciso cancelar nosso jogo de tênis na ${WDS_FULL[dt.getDay()]} dia ${dt.getDate()}/${dt.getMonth()+1} às ${slot.time}. Mil desculpas pelo inconveniente! 🙏🎾`;
+    window.open(`https://wa.me/55${otherTel}?text=${encodeURIComponent(msg)}`, '_blank');
+
+    showToast('Jogo cancelado. Abrindo WhatsApp...');
+
+    if (db) {
+      await update(ref(db, 'slots/' + id), { status: 'cancelled' });
+    } else {
+      slot.status = 'cancelled'; saveLocal(); renderJogos();
+    }
   };
 
   window._confirmMatch = async function() {
