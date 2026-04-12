@@ -324,6 +324,62 @@
     .tab { font-size: 11px; padding: 10px 3px; }
     .match-time { font-size: 18px; min-width: 46px; }
   }
+
+  /* Modal bottom sheet */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-sheet {
+    background: var(--surface);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 1rem 1.25rem 2.25rem;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+  }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 1.25rem;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: .65rem;
+  }
+  .modal-slot-desc {
+    font-size: 13px;
+    color: #0d4a30;
+    margin-bottom: 1.1rem;
+    padding: 10px 12px;
+    background: var(--green-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(26,122,82,0.18);
+    font-weight: 500;
+  }
+  .btn-cancel-modal {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 8px;
+  }
+  .slot-item.clickable { cursor: pointer; }
+  .slot-item.clickable:hover { background: var(--green-light); border-color: rgba(26,122,82,0.3); }
+  .slot-tap-hint { font-size: 11px; color: var(--green); font-weight: 600; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -379,6 +435,19 @@
 
 </div>
 
+<!-- Modal marcar jogo -->
+<div class="modal-overlay" id="match-modal" onclick="if(event.target===this)window._closeModal()" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Marcar jogo</div>
+    <div class="modal-slot-desc" id="modal-slot-desc"></div>
+    <div class="input-row"><label>Seu nome</label><input type="text" id="modal-nome" placeholder="ex: Carlos" autocomplete="name" /></div>
+    <div class="input-row"><label>WhatsApp</label><input type="tel" id="modal-tel" placeholder="ex: 11999998888" autocomplete="tel" /></div>
+    <button class="btn-primary" onclick="window._confirmMatch()">Marcar jogo 🎾</button>
+    <button class="btn-cancel-modal" onclick="window._closeModal()">Cancelar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Firebase SDKs -->
@@ -386,15 +455,6 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getDatabase, ref, set, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-  // ============================================================
-  //  🔧 CONFIGURAÇÃO DO FIREBASE
-  //  1. Acesse https://console.firebase.google.com
-  //  2. Crie um projeto (gratuito)
-  //  3. Vá em "Realtime Database" → "Criar banco de dados"
-  //  4. Escolha modo de teste (regras abertas por 30 dias)
-  //  5. Copie as configurações abaixo do seu projeto:
-  //     Configurações do projeto → Seus apps → SDK config
-  // ============================================================
   const firebaseConfig = {
     apiKey: "AIzaSyCYQje7u0N7kuZ2dF6GqxouIkxvwWh4",
     authDomain: "tenis-match-65f0b.firebaseapp.com",
@@ -404,7 +464,6 @@
     messagingSenderId: "905314969197",
     appId: "1:905314969197:web:e5f9c9213a48b74bb15a4"
   };
-  // ============================================================
 
   const TIMES = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
   const WDS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -414,13 +473,11 @@
   let currentTab = 'jogos';
   let db = null;
 
-  // Tenta inicializar Firebase
   try {
     if (firebaseConfig.apiKey !== 'COLE_AQUI') {
       const app = initializeApp(firebaseConfig);
       db = getDatabase(app);
       document.getElementById('config-banner').style.display = 'none';
-      // Escuta mudanças em tempo real
       onValue(ref(db, 'slots'), (snapshot) => {
         slots = [];
         if (snapshot.exists()) {
@@ -432,7 +489,6 @@
         if (currentTab === 'ver') renderSlotsList();
       });
     } else {
-      // Modo demo: usa localStorage
       loadFromLocal();
     }
   } catch(e) {
@@ -464,6 +520,21 @@
 
   let selDay = null, selTime = null;
 
+  function getFilteredTimes(date) {
+    if (!date) return TIMES;
+    const dt = new Date(date + 'T12:00:00');
+    const dow = dt.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const maxHour = isWeekend ? 19 : 21;
+    let times = TIMES.filter(t => parseInt(t) <= maxHour);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (date === todayStr) {
+      const nowHour = new Date().getHours();
+      times = times.filter(t => parseInt(t) > nowHour);
+    }
+    return times;
+  }
+
   function renderDays() {
     const g = document.getElementById('days-grid'); g.innerHTML = '';
     getDays().forEach(d => {
@@ -477,7 +548,7 @@
 
   function renderTimes() {
     const g = document.getElementById('times-grid'); g.innerHTML = '';
-    TIMES.forEach(t => {
+    getFilteredTimes(selDay).forEach(t => {
       const hasSlot = slots.some(s => s.date === selDay && s.time === t && s.status === 'waiting');
       const b = document.createElement('div');
       b.className = 'time-btn' + (selTime === t ? ' selected' : '') + (hasSlot ? ' has-slot' : '');
@@ -530,18 +601,54 @@
     active.forEach(s => {
       const dt = new Date(s.date + 'T12:00:00');
       const label = `${WDS[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1} às ${s.time}`;
-      const div = document.createElement('div'); div.className = 'slot-item';
+      const div = document.createElement('div');
       const isMine = (myTel && s.tel === myTel) || (myNome && s.name.toLowerCase() === myNome);
-      const cancelBtn = isMine ? `<button class="btn-cancel" onclick="window._cancelSlot('${s.id}')">Cancelar</button>` : '';
-      const matchBtn = !isMine ? `<button class="btn-match" onclick="window._doMatch('${s.id}')">Quero jogar</button>` : '';
-      div.innerHTML = `<div style="min-width:0"><div class="slot-info">${label}</div><div class="slot-who">${s.name}</div></div><div class="slot-actions"><span class="badge badge-waiting">Aguardando</span>${matchBtn}${cancelBtn}</div>`;
+      if (isMine) {
+        div.className = 'slot-item';
+        div.innerHTML = `<div style="min-width:0"><div class="slot-info">${label}</div><div class="slot-who">${s.name}</div></div><div class="slot-actions"><span class="badge badge-waiting">Aguardando</span><button class="btn-cancel" onclick="window._cancelSlot('${s.id}')">Cancelar</button></div>`;
+      } else {
+        div.className = 'slot-item clickable';
+        div.innerHTML = `<div style="min-width:0"><div class="slot-info">${label}</div><div class="slot-who">${s.name}</div></div><div class="slot-actions"><span class="badge badge-waiting">Aguardando</span><span class="slot-tap-hint">Jogar →</span></div>`;
+        div.onclick = () => window._openMatchModal(s.id);
+      }
       el.appendChild(div);
     });
   }
 
-  window._doMatch = async function(id) {
-    const nome = document.getElementById('inp-nome').value.trim();
-    const tel = document.getElementById('inp-tel').value.replace(/\D/g,'');
+  let pendingMatchId = null;
+
+  window._openMatchModal = function(id) {
+    pendingMatchId = id;
+    const slot = slots.find(s => s.id === id);
+    if (!slot) return;
+    const dt = new Date(slot.date + 'T12:00:00');
+    document.getElementById('modal-slot-desc').textContent =
+      `${WDS_FULL[dt.getDay()]}, ${dt.getDate()}/${dt.getMonth()+1} às ${slot.time} — com ${slot.name}`;
+    document.getElementById('modal-nome').value = document.getElementById('inp-nome').value;
+    document.getElementById('modal-tel').value = document.getElementById('inp-tel').value;
+    document.getElementById('match-modal').style.display = 'flex';
+  };
+
+  window._closeModal = function() {
+    document.getElementById('match-modal').style.display = 'none';
+    pendingMatchId = null;
+  };
+
+  window._confirmMatch = async function() {
+    const nome = document.getElementById('modal-nome').value.trim();
+    const tel = document.getElementById('modal-tel').value.replace(/\D/g,'');
+    if (!nome) { showToast('Digite seu nome'); return; }
+    if (tel.length < 10) { showToast('Digite um WhatsApp válido'); return; }
+    document.getElementById('inp-nome').value = nome;
+    document.getElementById('inp-tel').value = tel;
+    const id = pendingMatchId;
+    window._closeModal();
+    await window._doMatch(id, nome, tel);
+  };
+
+  window._doMatch = async function(id, nome, tel) {
+    if (!nome) nome = document.getElementById('inp-nome').value.trim();
+    if (!tel) tel = document.getElementById('inp-tel').value.replace(/\D/g,'');
     if (!nome || tel.length < 10) { showToast('Preencha seu nome e WhatsApp na aba "Quero jogar"'); return; }
     const slot = slots.find(s => s.id === id);
     if (!slot || slot.status !== 'waiting') return;
@@ -615,45 +722,6 @@
   renderTimes();
   renderJogos();
 </script>
-
-<!--
-=================================================================
-📋 INSTRUÇÕES PARA CONFIGURAR O FIREBASE (5 minutos)
-=================================================================
-
-1. Acesse https://console.firebase.google.com
-   → Faça login com sua conta Google
-
-2. Clique em "Criar um projeto"
-   → Dê um nome (ex: "tenis-grupo")
-   → Pode desativar o Google Analytics
-   → Clique em "Criar projeto"
-
-3. No menu lateral, clique em "Realtime Database"
-   → Clique em "Criar banco de dados"
-   → Escolha a localização (us-central1 está bem)
-   → Selecione "Iniciar no modo de teste" → Ativar
-
-4. Volte na tela principal do projeto
-   → Clique no ícone "</>" (Web) para registrar seu app
-   → Dê um apelido e clique em "Registrar app"
-   → Copie os valores do firebaseConfig que aparecer
-
-5. Cole os valores no bloco firebaseConfig no início
-   do script deste arquivo (substitua os "COLE_AQUI")
-
-6. Hospede o arquivo em qualquer lugar:
-   → GitHub Pages (gratuito): https://pages.github.com
-   → Netlify (gratuito): arraste o arquivo em netlify.com/drop
-   → Qualquer hosting de arquivos estáticos
-
-7. Mande o link no grupo do WhatsApp e pronto! 🎾
-
-DICA: O plano gratuito do Firebase (Spark) suporta
-até 1GB de dados e 10GB de transferência/mês —
-mais do que suficiente para um grupo de tênis.
-=================================================================
--->
 
 </body>
 </html>
