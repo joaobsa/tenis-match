@@ -305,7 +305,6 @@
     .match-time { font-size: 18px; min-width: 46px; }
   }
 
-  /* Modal bottom sheet */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -396,7 +395,6 @@
     ⚠️ <strong>Configure o banco de dados:</strong> Siga as instruções no final do arquivo HTML para conectar ao Firebase e compartilhar dados com o grupo.
   </div>
 
-  <!-- ABA DISPONIBILIDADES -->
   <div id="tab-ver">
     <div class="card">
       <div class="section-label">Disponibilidades abertas</div>
@@ -405,7 +403,6 @@
     </div>
   </div>
 
-  <!-- ABA QUERO JOGAR -->
   <div id="tab-agendar" style="display:none">
     <div class="card">
       <div class="section-label">Selecione o dia</div>
@@ -422,14 +419,12 @@
     </div>
   </div>
 
-  <!-- ABA JOGOS MARCADOS -->
   <div id="tab-jogos" style="display:none">
     <div id="jogos-content"><div class="empty">Carregando...</div></div>
   </div>
 
 </div>
 
-<!-- Modal marcar jogo -->
 <div class="modal-overlay" id="match-modal" onclick="if(event.target===this)window._closeModal()" style="display:none">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -442,7 +437,6 @@
   </div>
 </div>
 
-<!-- Modal cancelar jogo marcado -->
 <div class="modal-overlay" id="cancel-match-modal" onclick="if(event.target===this)window._closeCancelModal()" style="display:none">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -472,7 +466,7 @@
     appId: "1:905314969197:web:e5f9c9213a48b74bb15a4"
   };
 
-  const TIMES = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+  const TIMES = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
   const WDS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const WDS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
@@ -763,8 +757,7 @@
   function openWpp(slot) {
     const dt = new Date(slot.date + 'T12:00:00');
     const msg = `Oi ${slot.name}! Vi sua disponibilidade no app e quero jogar com você na ${WDS_FULL[dt.getDay()]} dia ${dt.getDate()}/${dt.getMonth()+1} às ${slot.time}. Combinamos? 🎾`;
-    const url = `https://wa.me/55${slot.tel}?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
+    window.open(`https://wa.me/55${slot.tel}?text=${encodeURIComponent(msg)}`, '_blank');
   }
 
   window.switchTab = function(tab) {
