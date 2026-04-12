@@ -241,7 +241,6 @@
 
   .cancel-hint { font-size: 12px; color: var(--muted); margin-top: .75rem; text-align: center; }
 
-  /* Jogos marcados */
   .group-date {
     font-size: 12px;
     font-weight: 600;
@@ -286,7 +285,6 @@
 
   .empty { text-align: center; padding: 2rem; font-size: 14px; color: var(--muted); }
 
-  /* Toast */
   .toast {
     position: fixed;
     bottom: 1.5rem;
@@ -306,7 +304,6 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* Config banner */
   .config-banner {
     background: #fff3cd;
     border: 1px solid #ffc107;
@@ -397,17 +394,14 @@
 
 <div class="content">
 
-  <!-- CONFIGURAÇÃO DO FIREBASE -->
   <div class="config-banner" id="config-banner">
     ⚠️ <strong>Configure o banco de dados:</strong> Siga as instruções no final do arquivo HTML para conectar ao Firebase e compartilhar dados com o grupo.
   </div>
 
-  <!-- ABA JOGOS MARCADOS -->
   <div id="tab-jogos">
     <div id="jogos-content"><div class="empty">Carregando...</div></div>
   </div>
 
-  <!-- ABA QUERO JOGAR -->
   <div id="tab-agendar" style="display:none">
     <div class="card">
       <div class="section-label">Selecione o dia</div>
@@ -424,7 +418,6 @@
     </div>
   </div>
 
-  <!-- ABA DISPONIBILIDADES -->
   <div id="tab-ver" style="display:none">
     <div class="card">
       <div class="section-label">Disponibilidades abertas</div>
@@ -450,7 +443,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDKs -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getDatabase, ref, set, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
@@ -561,9 +553,12 @@
 
   function renderJogos() {
     const el = document.getElementById('jogos-content');
-    const today = new Date().toISOString().slice(0,10);
-    const matched = slots.filter(s => s.status === 'matched' && s.date >= today)
-      .sort((a,b) => a.date+a.time > b.date+b.time ? 1 : -1);
+    const now = new Date();
+    const matched = slots.filter(s => {
+      if (s.status !== 'matched') return false;
+      const gameTime = new Date(s.date + 'T' + s.time + ':00');
+      return gameTime > now;
+    }).sort((a,b) => a.date+a.time > b.date+b.time ? 1 : -1);
 
     if (!matched.length) {
       el.innerHTML = `<div class="no-matches"><div class="icon">🎾</div><p>Nenhum jogo marcado ainda.<br>Publique sua disponibilidade!</p></div>`;
@@ -653,13 +648,13 @@
     const slot = slots.find(s => s.id === id);
     if (!slot || slot.status !== 'waiting') return;
     slot.status = 'matched'; slot.matchName = nome; slot.matchTel = tel;
+    openWpp(slot);
+    showToast('Match feito! Abrindo WhatsApp... 🎾');
     if (db) {
       await update(ref(db, 'slots/' + id), { status: 'matched', matchName: nome, matchTel: tel });
     } else {
       saveLocal(); renderSlotsList(); renderJogos();
     }
-    showToast('Match feito! Abrindo WhatsApp... 🎾');
-    openWpp(slot);
   };
 
   window._cancelSlot = async function(id) {
@@ -697,7 +692,7 @@
     const dt = new Date(slot.date + 'T12:00:00');
     const msg = `Oi ${slot.name}! Vi sua disponibilidade no app e quero jogar com você na ${WDS_FULL[dt.getDay()]} dia ${dt.getDate()}/${dt.getMonth()+1} às ${slot.time}. Combinamos? 🎾`;
     const url = `https://wa.me/55${slot.tel}?text=${encodeURIComponent(msg)}`;
-    setTimeout(() => window.open(url, '_blank'), 500);
+    window.open(url, '_blank');
   }
 
   window.switchTab = function(tab) {
