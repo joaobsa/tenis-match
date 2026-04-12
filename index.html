@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎾 Tênis Match</title>
+<title>🎾 Tenis ECP dos Brothers</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -315,7 +315,6 @@
     line-height: 1.5;
   }
   .config-banner strong { font-weight: 600; }
-  .config-banner a { color: #5a4500; }
 
   @media (max-width: 360px) {
     .tab { font-size: 11px; padding: 10px 3px; }
@@ -382,14 +381,14 @@
 <body>
 
 <header>
-  <h1>🎾 Tênis Match</h1>
+  <h1>🎾 Tenis ECP dos Brothers</h1>
   <p>Encontre parceiros para jogar</p>
 </header>
 
 <div class="tabs">
-  <div class="tab active" onclick="window.switchTab('jogos')">Jogos marcados</div>
+  <div class="tab active" onclick="window.switchTab('ver')">Disponibilidades</div>
   <div class="tab" onclick="window.switchTab('agendar')">Quero jogar</div>
-  <div class="tab" onclick="window.switchTab('ver')">Disponibilidades</div>
+  <div class="tab" onclick="window.switchTab('jogos')">Jogos marcados</div>
 </div>
 
 <div class="content">
@@ -398,10 +397,16 @@
     ⚠️ <strong>Configure o banco de dados:</strong> Siga as instruções no final do arquivo HTML para conectar ao Firebase e compartilhar dados com o grupo.
   </div>
 
-  <div id="tab-jogos">
-    <div id="jogos-content"><div class="empty">Carregando...</div></div>
+  <!-- ABA DISPONIBILIDADES -->
+  <div id="tab-ver">
+    <div class="card">
+      <div class="section-label">Disponibilidades abertas</div>
+      <div class="slots-list" id="slots-list"><div class="empty">Carregando...</div></div>
+      <p class="cancel-hint">Você só pode cancelar horários que você mesmo publicou</p>
+    </div>
   </div>
 
+  <!-- ABA QUERO JOGAR -->
   <div id="tab-agendar" style="display:none">
     <div class="card">
       <div class="section-label">Selecione o dia</div>
@@ -418,12 +423,9 @@
     </div>
   </div>
 
-  <div id="tab-ver" style="display:none">
-    <div class="card">
-      <div class="section-label">Disponibilidades abertas</div>
-      <div class="slots-list" id="slots-list"><div class="empty">Carregando...</div></div>
-      <p class="cancel-hint">Você só pode cancelar horários que você mesmo publicou</p>
-    </div>
+  <!-- ABA JOGOS MARCADOS -->
+  <div id="tab-jogos" style="display:none">
+    <div id="jogos-content"><div class="empty">Carregando...</div></div>
   </div>
 
 </div>
@@ -462,7 +464,7 @@
   const WDS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
   let slots = [];
-  let currentTab = 'jogos';
+  let currentTab = 'ver';
   let db = null;
 
   try {
@@ -491,7 +493,7 @@
     try {
       slots = JSON.parse(localStorage.getItem('tennis_slots') || '[]');
     } catch(e) { slots = []; }
-    renderJogos();
+    renderSlotsList();
     renderDays();
     renderTimes();
   }
@@ -701,7 +703,7 @@
     document.getElementById('tab-agendar').style.display = tab === 'agendar' ? '' : 'none';
     document.getElementById('tab-ver').style.display = tab === 'ver' ? '' : 'none';
     document.querySelectorAll('.tab').forEach((t,i) => {
-      t.classList.toggle('active', (i===0&&tab==='jogos')||(i===1&&tab==='agendar')||(i===2&&tab==='ver'));
+      t.classList.toggle('active', (i===0&&tab==='ver')||(i===1&&tab==='agendar')||(i===2&&tab==='jogos'));
     });
     if (tab === 'jogos') renderJogos();
     if (tab === 'ver') renderSlotsList();
@@ -715,7 +717,7 @@
 
   renderDays();
   renderTimes();
-  renderJogos();
+  renderSlotsList();
 </script>
 
 </body>
