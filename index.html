@@ -203,6 +203,7 @@
 
   .slot-info { font-size: 13px; font-weight: 500; color: var(--text); }
   .slot-who { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .slot-level { font-size: 11px; color: var(--green); font-weight: 600; }
   .slot-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
   .badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
@@ -371,6 +372,28 @@
     font-family: 'DM Sans', sans-serif;
     margin-top: 8px;
   }
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-bottom: 1rem;
+  }
+  .level-btn {
+    padding: 8px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    background: var(--bg);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    transition: all .15s;
+    user-select: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .level-btn:hover { background: var(--green-light); border-color: var(--green); }
+  .level-btn.selected { border: 2px solid var(--green); background: var(--green-light); color: var(--green); font-weight: 600; }
   .slot-item.clickable { cursor: pointer; }
   .slot-item.clickable:hover { background: var(--green-light); border-color: rgba(26,122,82,0.3); }
   .slot-tap-hint { font-size: 11px; color: var(--green); font-weight: 600; white-space: nowrap; }
@@ -405,6 +428,8 @@
 
   <div id="tab-agendar" style="display:none">
     <div class="card">
+      <div class="section-label">Nível <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(opcional)</span></div>
+      <div class="level-grid" id="level-grid"></div>
       <div class="section-label">Selecione o dia</div>
       <div class="days-grid" id="days-grid"></div>
       <div class="section-label">Selecione o horário</div>
@@ -467,6 +492,7 @@
   };
 
   const TIMES = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+  const LEVELS = ['Iniciante','Intermediário','Avançado','1ª Classe'];
   const WDS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const WDS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
@@ -502,6 +528,7 @@
     } catch(e) { slots = []; }
     renderSlotsList();
     renderDays();
+    renderLevels();
     renderTimes();
   }
 
@@ -519,7 +546,7 @@
     return d;
   }
 
-  let selDay = null, selTime = null;
+  let selDay = null, selTime = null, selLevel = null;
 
   function getFilteredTimes(date) {
     if (!date) return TIMES;
@@ -534,6 +561,17 @@
       times = times.filter(t => parseInt(t) > nowHour);
     }
     return times;
+  }
+
+  function renderLevels() {
+    const g = document.getElementById('level-grid'); g.innerHTML = '';
+    LEVELS.forEach(l => {
+      const b = document.createElement('div');
+      b.className = 'level-btn' + (selLevel === l ? ' selected' : '');
+      b.textContent = l;
+      b.onclick = () => { selLevel = selLevel === l ? null : l; renderLevels(); };
+      g.appendChild(b);
+    });
   }
 
   function renderDays() {
@@ -607,12 +645,13 @@
       const label = `${WDS[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1} às ${s.time}`;
       const div = document.createElement('div');
       const isMine = (myTel && s.tel === myTel) || (myNome && s.name.toLowerCase() === myNome);
+      const levelHtml = s.level ? `<span class="slot-level"> • ${s.level}</span>` : '';
       if (isMine) {
         div.className = 'slot-item';
-        div.innerHTML = `<div style="min-width:0"><div class="slot-info">${label}</div><div class="slot-who">${s.name}</div></div><div class="slot-actions"><span class="badge badge-waiting">Aguardando</span><button class="btn-cancel" onclick="window._cancelSlot('${s.id}')">Cancelar</button></div>`;
+        div.innerHTML = `<div style="min-width:0"><div class="slot-info">${label}</div><div class="slot-who">${s.name}${levelHtml}</div></div><div class="slot-actions"><span class="badge badge-waiting">Aguardando</span><button class="btn-cancel" onclick="window._cancelSlot('${s.id}')">Cancelar</button></div>`;
       } else {
         div.className = 'slot-item clickable';
-        div.innerHTML = `<div style="min-width:0"><div class="slot-info">${label}</div><div class="slot-who">${s.name}</div></div><div class="slot-actions"><span class="badge badge-waiting">Aguardando</span><span class="slot-tap-hint">Jogar →</span></div>`;
+        div.innerHTML = `<div style="min-width:0"><div class="slot-info">${label}</div><div class="slot-who">${s.name}${levelHtml}</div></div><div class="slot-actions"><span class="badge badge-waiting">Aguardando</span><span class="slot-tap-hint">Jogar →</span></div>`;
         div.onclick = () => window._openMatchModal(s.id);
       }
       el.appendChild(div);
@@ -626,8 +665,9 @@
     const slot = slots.find(s => s.id === id);
     if (!slot) return;
     const dt = new Date(slot.date + 'T12:00:00');
+    const levelText = slot.level ? ` • ${slot.level}` : '';
     document.getElementById('modal-slot-desc').textContent =
-      `${WDS_FULL[dt.getDay()]}, ${dt.getDate()}/${dt.getMonth()+1} às ${slot.time} — com ${slot.name}`;
+      `${WDS_FULL[dt.getDay()]}, ${dt.getDate()}/${dt.getMonth()+1} às ${slot.time} — com ${slot.name}${levelText}`;
     document.getElementById('modal-nome').value = document.getElementById('inp-nome').value;
     document.getElementById('modal-tel').value = document.getElementById('inp-tel').value;
     document.getElementById('match-modal').style.display = 'flex';
@@ -744,14 +784,14 @@
     const exists = slots.find(s => s.date === selDay && s.time === selTime && s.status === 'waiting');
     if (exists) { showToast('Já tem alguém nesse horário!'); switchTab('ver'); return; }
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-    const slot = { id, date: selDay, time: selTime, name: nome, tel, status: 'waiting', createdAt: Date.now() };
+    const slot = { id, date: selDay, time: selTime, name: nome, tel, level: selLevel || null, status: 'waiting', createdAt: Date.now() };
     if (db) {
       await set(ref(db, 'slots/' + id), slot);
     } else {
       slots.push(slot); saveLocal(); renderTimes();
     }
     showToast('Publicado! 🎾');
-    selTime = null; renderTimes();
+    selTime = null; selLevel = null; renderTimes(); renderLevels();
   };
 
   function openWpp(slot) {
@@ -779,6 +819,7 @@
   }
 
   renderDays();
+  renderLevels();
   renderTimes();
   renderSlotsList();
 </script>
