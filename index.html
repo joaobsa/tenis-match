@@ -22,48 +22,349 @@
     --radius: 14px;
     --radius-sm: 8px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 2rem; }
+  header { background: var(--green); padding: 1.25rem 1rem 1rem; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  header h1 { font-family: "DM Serif Display", serif; font-size: 24px; color: #fff; letter-spacing: -0.3px; }
+  header p { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .tabs { display: flex; background: var(--green); padding: 0 1rem; border-top: 1px solid rgba(255,255,255,0.15); }
+  .tab { flex: 1; padding: 10px 6px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6); cursor: pointer; text-align: center; border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+  .tab.active { color: #fff; border-bottom-color: #fff; }
+  .content { max-width: 480px; margin: 0 auto; padding: 1rem; }
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.1rem; margin-bottom: .85rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: .6rem; }
+  .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 1rem; }
+  .day-btn { display: flex; flex-direction: column; align-items: center; padding: 7px 3px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--bg); transition: all .15s; user-select: none; }
+  .day-btn:hover { background: var(--green-light); border-color: var(--green); }
+  .day-btn.selected { border: 2px solid var(--green); background: var(--green-light); }
+  .day-btn .wd { font-size: 9px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+  .day-btn .dd { font-size: 15px; font-weight: 600; color: var(--text); }
+  .day-btn.selected .dd, .day-btn.selected .wd { color: var(--green); }
+  .times-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .time-btn { padding: 9px 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--bg); font-size: 13px; font-weight: 500; color: var(--text); text-align: center; position: relative; transition: all .15s; user-select: none; font-family: "DM Sans", sans-serif; }
+  .time-btn:hover { background: var(--green-light); border-color: var(--green); }
+  .time-btn.selected { border: 2px solid var(--green); background: var(--green-light); color: var(--green); }
+  .time-btn.has-slot { border-color: #d4860a; }
+  .time-btn .dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+  .legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: .6rem; }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+  .input-row { display: flex; gap: 8px; align-items: center; margin-bottom: .65rem; }
+  .input-row label { font-size: 13px; color: var(--muted); min-width: 74px; }
+  .input-row input { flex: 1; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); outline: none; transition: border .15s; }
+  .input-row input:focus { border-color: var(--green); background: #fff; }
+  .btn-primary { width: 100%; padding: 11px; background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; font-family: "DM Sans", sans-serif; transition: background .15s; }
+  .btn-primary:hover { background: #155f3f; }
+  .slots-list { display: flex; flex-direction: column; gap: 8px; }
+  .slot-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); gap: 8px; }
+  .slot-info { font-size: 13px; font-weight: 500; color: var(--text); }
+  .slot-who { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .slot-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .badge-waiting { background: var(--amber-light); color: var(--amber); }
+  .badge-matched { background: var(--green-light); color: var(--green); }
+  .btn-cancel { padding: 6px 10px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; font-family: "DM Sans", sans-serif; transition: all .15s; }
+  .btn-cancel:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+  .cancel-hint { font-size: 12px; color: var(--muted); margin-top: .75rem; text-align: center; }
+  .group-date { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 1rem 0 .5rem; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .match-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--green-light); border-radius: var(--radius-sm); border: 1px solid rgba(26,122,82,0.15); margin-bottom: 8px; }
+  .match-time { font-family: "DM Serif Display", serif; font-size: 22px; color: var(--green); min-width: 56px; line-height: 1; }
+  .match-vs { display: flex; flex-direction: column; flex: 1; gap: 1px; }
+  .match-player { font-size: 14px; font-weight: 600; color: #0d4a30; }
+  .match-divider { font-size: 11px; color: var(--green-mid); font-weight: 600; letter-spacing: .04em; }
+  .match-ball { font-size: 22px; flex-shrink: 0; }
+  .no-matches { text-align: center; padding: 3rem 1rem 2rem; }
+  .no-matches .icon { font-size: 44px; margin-bottom: .75rem; }
+  .no-matches p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .empty { text-align: center; padding: 2rem; font-size: 14px; color: var(--muted); }
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(10px); background: #1a1a18; color: #f5f2ec; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: all .3s; pointer-events: none; z-index: 999; white-space: nowrap; font-family: "DM Sans", sans-serif; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .config-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 1rem; font-size: 13px; color: #856404; line-height: 1.5; }
+  .config-banner strong { font-weight: 600; }
+  .slot-clickable { cursor: pointer; transition: all .15s; }
+  .slot-clickable:hover { border-color: var(--green); background: var(--green-light); }
+  .slot-mine { cursor: default; }
+  .slot-hint { font-size: 11px; color: var(--green); font-weight: 600; white-space: nowrap; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-box { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 1.5rem 1.25rem 2rem; width: 100%; max-width: 480px; animation: slideUp .25s ease; }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-title { font-family: "DM Serif Display", serif; font-size: 19px; color: var(--text); margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; }
+  .modal-sub strong { color: var(--green); font-weight: 600; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1rem; }
+  .btn-secondary { flex: 1; padding: 11px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; font-family: "DM Sans", sans-serif; transition: background .15s; }
+  .btn-secondary:hover { background: var(--bg); }
+  .modal-actions .btn-primary { flex: 2; margin-top: 0; }
+  @media (max-width: 360px) { .tab { font-size: 11px; padding: 10px 3px; } .match-time { font-size: 18px; min-width: 46px; } }
+</style>
+</head>
+<body>
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding-bottom: 2rem;
+<header>
+  <h1>&#127934; Tênis Match</h1>
+  <p>Encontre parceiros para jogar</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="window.switchTab('jogos')">Jogos marcados</div>
+  <div class="tab" onclick="window.switchTab('agendar')">Quero jogar</div>
+  <div class="tab" onclick="window.switchTab('ver')">Disponibilidades</div>
+</div>
+
+<div class="content">
+  <div class="config-banner" id="config-banner">
+    <strong>Configure o banco de dados:</strong> Siga as instrucoes no final do arquivo para conectar ao Firebase.
+  </div>
+  <div id="tab-jogos">
+    <div id="jogos-content"><div class="empty">Carregando...</div></div>
+  </div>
+  <div id="tab-agendar" style="display:none">
+    <div class="card">
+      <div class="section-label">Selecione o dia</div>
+      <div class="days-grid" id="days-grid"></div>
+      <div class="section-label">Selecione o horario</div>
+      <div class="legend"><div class="legend-dot"></div> alguem quer jogar nesse horario</div>
+      <div class="times-grid" id="times-grid"></div>
+    </div>
+    <div class="card">
+      <div class="section-label">Seus dados</div>
+      <div class="input-row"><label>Nome</label><input type="text" id="inp-nome" placeholder="ex: Carlos" autocomplete="name"></div>
+      <div class="input-row"><label>WhatsApp</label><input type="tel" id="inp-tel" placeholder="ex: 11999998888" autocomplete="tel"></div>
+      <button class="btn-primary" onclick="window.publicar()">Publicar disponibilidade</button>
+    </div>
+  </div>
+  <div id="tab-ver" style="display:none">
+    <div class="card">
+      <div class="section-label">Disponibilidades abertas</div>
+      <div class="slots-list" id="slots-list"><div class="empty">Carregando...</div></div>
+      <p class="cancel-hint">Voce so pode cancelar horarios que voce mesmo publicou</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)window._closeModal()">
+  <div class="modal-box">
+    <div class="modal-title">Confirmar jogo</div>
+    <div class="modal-sub" id="modal-label"></div>
+    <div class="modal-sub">Proposto por: <strong id="modal-proposer"></strong></div>
+    <input type="hidden" id="modal-id">
+    <div class="input-row"><label>Seu nome</label><input type="text" id="modal-nome" placeholder="ex: Carlos" autocomplete="name"></div>
+    <div class="input-row"><label>WhatsApp</label><input type="tel" id="modal-tel" placeholder="ex: 11999998888" autocomplete="tel"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="window._closeModal()">Voltar</button>
+      <button class="btn-primary" onclick="window._confirmMatch()">Marcar jogo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCYQje7u0N7kuZ2dF6GqxouIkxvwWh4",
+    authDomain: "tenis-match-65f0b.firebaseapp.com",
+    databaseURL: "https://tenis-match-65f0b-default-rtdb.firebaseio.com",
+    projectId: "tenis-match-65f0b",
+    storageBucket: "tenis-match-65f0b.firebasestorage.app",
+    messagingSenderId: "905314969197",
+    appId: "1:905314969197:web:e5f9c9213a48b74bb15a4"
+  };
+
+  const TIMES = ["07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
+  const WDS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
+  const WDS_FULL = ["Domingo","Segunda","Terca","Quarta","Quinta","Sexta","Sabado"];
+
+  let slots = [], currentTab = "jogos", db = null;
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    db = getDatabase(app);
+    document.getElementById("config-banner").style.display = "none";
+    onValue(ref(db, "slots"), (snapshot) => {
+      slots = [];
+      if (snapshot.exists()) Object.values(snapshot.val()).forEach(s => slots.push(s));
+      if (currentTab === "jogos") renderJogos();
+      if (currentTab === "agendar") renderTimes();
+      if (currentTab === "ver") renderSlotsList();
+    });
+  } catch(e) {
+    console.error("Firebase error:", e);
+    try { slots = JSON.parse(localStorage.getItem("tennis_slots") || "[]"); } catch(e2) { slots = []; }
+    renderJogos(); renderDays(); renderTimes();
   }
 
-  header {
-    background: var(--green);
-    padding: 1.25rem 1rem 1rem;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  function saveLocal() {
+    try { localStorage.setItem("tennis_slots", JSON.stringify(slots)); } catch(e) {}
   }
 
-  header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 24px;
-    color: #fff;
-    letter-spacing: -0.3px;
+  function getDays() {
+    const d = [], today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const dt = new Date(today); dt.setDate(today.getDate() + i);
+      d.push({ date: dt.toISOString().slice(0,10), wd: WDS[dt.getDay()], dd: dt.getDate() });
+    }
+    return d;
   }
 
-  header p {
-    font-size: 12px;
-    color: rgba(255,255,255,0.7);
-    margin-top: 2px;
+  let selDay = null, selTime = null;
+
+  function renderDays() {
+    const g = document.getElementById("days-grid"); g.innerHTML = "";
+    getDays().forEach(d => {
+      const b = document.createElement("div");
+      b.className = "day-btn" + (selDay === d.date ? " selected" : "");
+      b.innerHTML = "<span class=\"wd\">" + d.wd + "</span><span class=\"dd\">" + d.dd + "</span>";
+      b.onclick = () => { selDay = d.date; renderDays(); renderTimes(); };
+      g.appendChild(b);
+    });
   }
 
-  .tabs {
-    display: flex;
-    background: var(--green);
-    padding: 0 1rem;
-    gap: 0;
-    border-top: 1px solid rgba(255,255,255,0.15);
+  function isTimeAvailable(dateStr, timeStr) {
+    if (!dateStr) return true;
+    const h = parseInt(timeStr.split(":")[0]);
+    const dt = new Date(dateStr + "T" + timeStr + ":00");
+    if (dt <= new Date()) return false;
+    const dow = new Date(dateStr + "T12:00:00").getDay();
+    return h <= (dow === 0 || dow === 6 ? 19 : 21);
   }
 
-  .tab {
-    flex: 1;
-    padding: 10
+  function renderTimes() {
+    const g = document.getElementById("times-grid"); g.innerHTML = "";
+    TIMES.forEach(t => {
+      if (!isTimeAvailable(selDay, t)) return;
+      const hasSlot = slots.some(s => s.date === selDay && s.time === t && s.status === "waiting");
+      const b = document.createElement("div");
+      b.className = "time-btn" + (selTime === t ? " selected" : "") + (hasSlot ? " has-slot" : "");
+      b.textContent = t;
+      if (hasSlot) { const dot = document.createElement("div"); dot.className = "dot"; b.appendChild(dot); }
+      b.onclick = () => { selTime = t; renderTimes(); };
+      g.appendChild(b);
+    });
+  }
+
+  function renderJogos() {
+    const el = document.getElementById("jogos-content");
+    const today = new Date().toISOString().slice(0,10);
+    const matched = slots.filter(s => s.status === "matched" && s.date >= today)
+      .sort((a,b) => (a.date+a.time) > (b.date+b.time) ? 1 : -1);
+    if (!matched.length) {
+      el.innerHTML = "<div class=\"no-matches\"><div class=\"icon\">&#127934;</div><p>Nenhum jogo marcado ainda.<br>Publique sua disponibilidade!</p></div>";
+      return;
+    }
+    const byDate = {};
+    matched.forEach(s => { if (!byDate[s.date]) byDate[s.date] = []; byDate[s.date].push(s); });
+    let html = "";
+    Object.keys(byDate).sort().forEach(date => {
+      const dt = new Date(date + "T12:00:00");
+      html += "<div class=\"group-date\">" + WDS_FULL[dt.getDay()] + ", " + dt.getDate() + "/" + (dt.getMonth()+1) + "</div>";
+      byDate[date].forEach(s => {
+        html += "<div class=\"match-row\"><div class=\"match-time\">" + s.time + "</div><div class=\"match-vs\"><div class=\"match-player\">" + s.name + "</div><div class=\"match-divider\">vs</div><div class=\"match-player\">" + s.matchName + "</div></div><div class=\"match-ball\">&#127934;</div></div>";
+      });
+    });
+    el.innerHTML = html;
+  }
+
+  function renderSlotsList() {
+    const el = document.getElementById("slots-list");
+    const myTel = document.getElementById("inp-tel").value.replace(/\D/g,"");
+    const myNome = document.getElementById("inp-nome").value.trim().toLowerCase();
+    const now = new Date();
+    const active = slots.filter(s => s.status === "waiting" && new Date(s.date + "T" + s.time + ":00") > now);
+    if (!active.length) { el.innerHTML = "<div class=\"empty\">Nenhuma disponibilidade aberta. Seja o primeiro!</div>"; return; }
+    active.sort((a,b) => (a.date+a.time) > (b.date+b.time) ? 1 : -1);
+    el.innerHTML = "";
+    active.forEach(s => {
+      const dt = new Date(s.date + "T12:00:00");
+      const label = WDS[dt.getDay()] + " " + dt.getDate() + "/" + (dt.getMonth()+1) + " as " + s.time;
+      const div = document.createElement("div");
+      const isMine = (myTel && s.tel === myTel) || (myNome && s.name.toLowerCase() === myNome);
+      div.className = "slot-item" + (isMine ? " slot-mine" : " slot-clickable");
+      const cancelBtn = isMine ? "<button class=\"btn-cancel\" onclick=\"event.stopPropagation();window._cancelSlot('" + s.id + "')\">Cancelar</button>" : "";
+      const hint = !isMine ? "<span class=\"slot-hint\">Toque para jogar</span>" : "";
+      div.innerHTML = "<div style=\"min-width:0\"><div class=\"slot-info\">" + label + "</div><div class=\"slot-who\">" + s.name + "</div></div><div class=\"slot-actions\"><span class=\"badge badge-waiting\">Aguardando</span>" + hint + cancelBtn + "</div>";
+      if (!isMine) div.onclick = () => window._openModal(s.id);
+      el.appendChild(div);
+    });
+  }
+
+  window._openModal = function(id) {
+    const slot = slots.find(s => s.id === id); if (!slot) return;
+    const dt = new Date(slot.date + "T12:00:00");
+    document.getElementById("modal-label").textContent = WDS_FULL[dt.getDay()] + ", " + dt.getDate() + "/" + (dt.getMonth()+1) + " as " + slot.time;
+    document.getElementById("modal-proposer").textContent = slot.name;
+    document.getElementById("modal-id").value = id;
+    document.getElementById("modal-nome").value = document.getElementById("inp-nome").value || "";
+    document.getElementById("modal-tel").value = document.getElementById("inp-tel").value || "";
+    document.getElementById("modal").style.display = "flex";
+  };
+
+  window._closeModal = function() { document.getElementById("modal").style.display = "none"; };
+
+  window._confirmMatch = async function() {
+    const id = document.getElementById("modal-id").value;
+    const nome = document.getElementById("modal-nome").value.trim();
+    const tel = document.getElementById("modal-tel").value.replace(/\D/g,"");
+    if (!nome) { showToast("Digite seu nome"); return; }
+    if (tel.length < 10) { showToast("Digite um WhatsApp valido"); return; }
+    const slot = slots.find(s => s.id === id);
+    if (!slot || slot.status !== "waiting") { showToast("Horario nao esta mais disponivel"); window._closeModal(); return; }
+    document.getElementById("inp-nome").value = nome;
+    document.getElementById("inp-tel").value = tel;
+    slot.status = "matched"; slot.matchName = nome; slot.matchTel = tel;
+    if (db) { await update(ref(db, "slots/" + id), { status: "matched", matchName: nome, matchTel: tel }); }
+    else { saveLocal(); renderSlotsList(); renderJogos(); }
+    window._closeModal();
+    showToast("Match feito! Abrindo WhatsApp...");
+    const dt = new Date(slot.date + "T12:00:00");
+    const msg = "Oi " + slot.name + "! Vi sua disponibilidade no app e quero jogar com voce na " + WDS_FULL[dt.getDay()] + " dia " + dt.getDate() + "/" + (dt.getMonth()+1) + " as " + slot.time + ". Combinamos?";
+    setTimeout(() => window.open("https://wa.me/55" + slot.tel + "?text=" + encodeURIComponent(msg), "_blank"), 500);
+  };
+
+  window._cancelSlot = async function(id) {
+    const slot = slots.find(s => s.id === id); if (!slot) return;
+    if (db) { await update(ref(db, "slots/" + id), { status: "cancelled" }); }
+    else { slot.status = "cancelled"; saveLocal(); renderSlotsList(); }
+    showToast("Disponibilidade cancelada");
+  };
+
+  window.publicar = async function() {
+    const nome = document.getElementById("inp-nome").value.trim();
+    const tel = document.getElementById("inp-tel").value.replace(/\D/g,"");
+    if (!selDay) { showToast("Selecione um dia"); return; }
+    if (!selTime) { showToast("Selecione um horario"); return; }
+    if (!nome) { showToast("Digite seu nome"); return; }
+    if (tel.length < 10) { showToast("Digite um WhatsApp valido"); return; }
+    if (slots.find(s => s.date === selDay && s.time === selTime && s.status === "waiting")) {
+      showToast("Ja tem alguem nesse horario!"); window.switchTab("ver"); return;
+    }
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    const slot = { id, date: selDay, time: selTime, name: nome, tel, status: "waiting", createdAt: Date.now() };
+    if (db) { await set(ref(db, "slots/" + id), slot); }
+    else { slots.push(slot); saveLocal(); renderTimes(); }
+    showToast("Publicado!");
+    selTime = null; renderTimes();
+  };
+
+  window.switchTab = function(tab) {
+    currentTab = tab;
+    document.getElementById("tab-jogos").style.display = tab === "jogos" ? "" : "none";
+    document.getElementById("tab-agendar").style.display = tab === "agendar" ? "" : "none";
+    document.getElementById("tab-ver").style.display = tab === "ver" ? "" : "none";
+    document.querySelectorAll(".tab").forEach((t,i) => {
+      t.classList.toggle("active", (i===0&&tab==="jogos")||(i===1&&tab==="agendar")||(i===2&&tab==="ver"));
+    });
+    if (tab === "jogos") renderJogos();
+    if (tab === "ver") renderSlotsList();
+  };
+
+  function showToast(msg) {
+    const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3000);
+  }
+
+  renderDays(); renderTimes(); renderJogos();
+</script>
+</body>
+</html>
